@@ -80,6 +80,9 @@ public class Bridge implements MqttCallback {
 	@Override
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
 		String payload  = message.getPayload().toString();
+		if (payload.endsWith(" 0")) {
+			return;
+		}
 		/* if you know that payload is in utf-8, use
 		   String payload = String(message.getPayload(), StandardCharsets.UTF_8);
 		*/
