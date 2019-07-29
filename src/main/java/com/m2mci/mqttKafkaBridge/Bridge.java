@@ -86,7 +86,7 @@ public class Bridge implements MqttCallback {
 		/* if you know that payload is in utf-8, use
 		   String payload = String(message.getPayload(), StandardCharsets.UTF_8);
 		*/
-		String output = String.format(format, payload);
+		String output = String.format(format, payload, System.currentTimeMillis());
                 kafkaProducer.send(new KeyedMessage<String, String>(topic, new String(output)));
 	}
 
