@@ -24,6 +24,9 @@ public class CommandLineParser {
 	@Option(name="--topics", usage="MQTT topic filters (comma-separated)")
 	private String mqttTopicFilters = ALL_MQTT_TOPICS;
 
+	@Option(name="--send-to", usage="kafka topic (string format)")
+	private String kafkaTopicFormat = "%s";
+
 	@Option(name="--format", usage="kafka message format (java.lang.String.format)")
 	private String kafkaFormat = "%s";
 	
@@ -46,6 +49,10 @@ public class CommandLineParser {
 
 	public String getKafkaFormat() {
 		return kafkaFormat;
+	}
+
+	public String getKafkaTopicFormat() {
+		return kafkaTopicFormat;
 	}
 
 	public String[] getMqttTopicFilters() {

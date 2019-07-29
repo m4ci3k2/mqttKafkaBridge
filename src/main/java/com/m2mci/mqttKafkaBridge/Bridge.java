@@ -21,9 +21,11 @@ public class Bridge implements MqttCallback {
 	private MqttAsyncClient mqtt;
 	private Producer<String, String> kafkaProducer;
 	private String format;
+	private String kafkaFormat;
 
-	public Bridge(String format_) {
+	public Bridge(String format_, String kafkaFormat_) {
 		format = format_;
+		kafkaFormat = kafkaFormat_;
 	}
 	
 	private void connect(String serverURI, String clientId, String brokerList) throws MqttException {
@@ -79,11 +81,15 @@ public class Bridge implements MqttCallback {
 
 	@Override
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
-		String payload  = message.getPayload().toString();
+		//logger.info("from mqtt: topic %s, message %s".format(topic, message));
+		System.err.println(String.format("from mqtt: topic %s, message %s", topic, message));
+		String payload  = message.toString();
 		/* if you know that payload is in utf-8, use
 		   String payload = String(message.getPayload(), StandardCharsets.UTF_8);
 		*/
 		String output = String.format(format, payload);
+		topic = kafkaFormat.format(topic);
+		System.err.println(String.format("to kafka: topic %s, message %s", topic, payload));
                 kafkaProducer.send(new KeyedMessage<String, String>(topic, new String(output)));
 	}
 
@@ -95,7 +101,7 @@ public class Bridge implements MqttCallback {
 		try {
 			parser = new CommandLineParser();
 			parser.parse(args);
-			Bridge bridge = new Bridge(parser.getKafkaFormat());
+			Bridge bridge = new Bridge(parser.getKafkaFormat(), parser.getKafkaTopicFormat());
 			bridge.connect(parser.getServerURI(), parser.getClientId(), parser.getBrokerList());
 			bridge.subscribe(parser.getMqttTopicFilters());
 		} catch (MqttException e) {
