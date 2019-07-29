@@ -81,15 +81,14 @@ public class Bridge implements MqttCallback {
 
 	@Override
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
-		//logger.info("from mqtt: topic %s, message %s".format(topic, message));
-		System.err.println(String.format("from mqtt: topic %s, message %s", topic, message));
+		logger.debug(String.format("from mqtt: topic %s, message %s", topic, message));
 		String payload  = message.toString();
 		/* if you know that payload is in utf-8, use
 		   String payload = String(message.getPayload(), StandardCharsets.UTF_8);
 		*/
-		String output = String.format(format, payload);
-		topic = kafkaFormat.format(topic);
-		System.err.println(String.format("to kafka: topic %s, message %s", topic, payload));
+		String output = String.format(format, payload, System.currentTimeMillis(), topic);
+		topic = String.format(kafkaFormat, topic);
+		logger.debug(String.format("to kafka: topic %s, message %s", topic, output));
                 kafkaProducer.send(new KeyedMessage<String, String>(topic, new String(output)));
 	}
 
