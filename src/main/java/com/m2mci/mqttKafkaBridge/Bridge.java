@@ -2,6 +2,8 @@ package com.m2mci.mqttKafkaBridge;
 
 // import java.nio.charset.StandardCharsets;
 import java.util.Properties;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
@@ -22,10 +24,12 @@ public class Bridge implements MqttCallback {
 	private Producer<String, String> kafkaProducer;
 	private String format;
 	private String kafkaFormat;
+	private Pattern filter;
 
-	public Bridge(String format_, String kafkaFormat_) {
+	public Bridge(String format_, String kafkaFormat_, String filter_) {
 		format = format_;
 		kafkaFormat = kafkaFormat_;
+		filter = Pattern.compile(filter_);
 	}
 	
 	private void connect(String serverURI, String clientId, String brokerList) throws MqttException {
@@ -83,6 +87,11 @@ public class Bridge implements MqttCallback {
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
 		logger.debug(String.format("from mqtt: topic %s, message %s", topic, message));
 		String payload  = message.toString();
+		if (! filter.matcher(payload).lookingAt())
+		{
+			logger.debug("message does not match filter, ignoring");
+			return;
+		}
 		/* if you know that payload is in utf-8, use
 		   String payload = String(message.getPayload(), StandardCharsets.UTF_8);
 		*/
@@ -100,7 +109,7 @@ public class Bridge implements MqttCallback {
 		try {
 			parser = new CommandLineParser();
 			parser.parse(args);
-			Bridge bridge = new Bridge(parser.getKafkaFormat(), parser.getKafkaTopicFormat());
+			Bridge bridge = new Bridge(parser.getKafkaFormat(), parser.getKafkaTopicFormat(), parser.getFilter());
 			bridge.connect(parser.getServerURI(), parser.getClientId(), parser.getBrokerList());
 			bridge.subscribe(parser.getMqttTopicFilters());
 		} catch (MqttException e) {

@@ -29,6 +29,9 @@ public class CommandLineParser {
 
 	@Option(name="--format", usage="kafka message format (java.lang.String.format)")
 	private String kafkaFormat = "%s";
+
+	@Option(name="--filter", usage="message filter regex")
+	private String filter = "^";
 	
 	@Option(name="--help", aliases="-h", usage="Show help")
 	private boolean showHelp = false;
@@ -37,6 +40,10 @@ public class CommandLineParser {
 	
 	public String getClientId() {
 		return clientId;
+	}
+
+	public String getFilter() {
+		return filter;
 	}
 
 	public String getServerURI() {
