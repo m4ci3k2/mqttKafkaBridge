@@ -14,6 +14,7 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.kohsuke.args4j.CmdLineException;
@@ -32,10 +33,19 @@ public class Bridge implements MqttCallback {
 		filter = Pattern.compile(filter_);
 	}
 	
-	private void connect(String serverURI, String clientId, String brokerList) throws MqttException {
+	private void connect(String serverURI, String clientId, String brokerList, String username, String password) throws MqttException {
 		mqtt = new MqttAsyncClient(serverURI, clientId);
 		mqtt.setCallback(this);
-		IMqttToken token = mqtt.connect();
+		
+		MqttConnectOptions connOpts = new MqttConnectOptions();
+		if (username != null && username != "") {
+			connOpts.setUserName(username);
+		}
+		if (password != null && password != "") {
+			connOpts.setPassword(password.toCharArray());
+		}
+
+		IMqttToken token = mqtt.connect(connOpts);
 		Properties props = new Properties();
                 props.put("metadata.broker.list", brokerList);
 		props.put("serializer.class", "kafka.serializer.StringEncoder");
@@ -110,7 +120,7 @@ public class Bridge implements MqttCallback {
 			parser = new CommandLineParser();
 			parser.parse(args);
 			Bridge bridge = new Bridge(parser.getKafkaFormat(), parser.getKafkaTopicFormat(), parser.getFilter());
-			bridge.connect(parser.getServerURI(), parser.getClientId(), parser.getBrokerList());
+			bridge.connect(parser.getServerURI(), parser.getClientId(), parser.getBrokerList(), parser.getMqttUser(), parser.getMqttPassword());
 			bridge.subscribe(parser.getMqttTopicFilters());
 		} catch (MqttException e) {
 			e.printStackTrace(System.err);
